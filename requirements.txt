@@ -1,0 +1,8 @@
+streamlit
+pymongo
+pandas
+wordcloud
+matplotlib
+plotly
+requests
+schedule
