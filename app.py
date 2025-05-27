@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import plotly.express as px
+from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
 
 # --- Konfigurasi Halaman ---
 st.set_page_config(page_title="Analisis Artikel Tenis Meja", layout="wide", page_icon="🏓")
@@ -86,11 +87,35 @@ if not df_filtered.empty:
 else:
     st.info("Tidak ada data untuk visualisasi domain.")
 
-# --- Word Cloud Judul ---
+# --- Word Cloud Judul dengan Stopword ---
 st.markdown("### ☁ Word Cloud Judul Artikel")
+
 if not df_filtered['title'].dropna().empty:
-    text = " ".join(df_filtered['title'].dropna())
-    wc = WordCloud(width=800, height=400, background_color='white').generate(text)
+    # Gabungkan semua judul menjadi satu teks
+    raw_text = " ".join(df_filtered['title'].dropna()).lower()
+
+    # Stopword dari Sastrawi + tambahan manual
+    stopword_factory = StopWordRemoverFactory()
+    stopwords = set(stopword_factory.get_stop_words())
+    custom_stopwords = {
+        'kata', 'salah', 'tersebut', 'jadi', 'hingga', 'tak', 'tidak', 'yang', 'untuk',
+        'dari', 'oleh', 'dalam', 'atas', 'sudah', 'akan', 'ini', 'itu', 'sangat', 'juga',
+        'lalu', 'baru', 'pun', 'semua', 'apa', 'kalau', 'kini', 'mungkin', 'namun',
+        'memang', 'tetap', 'agar', 'bukan', 'dengan', 'telah', 'adalah', 'sendiri', 'atau',
+        'satu', 'sama', 'lebih', 'bagaimana', 'terus', 'melalui', 'punya', 'masih', 'sejak',
+        'baik', 'bahkan', 'selama', 'ketika', 'kemudian', 'sedang', 'karena', 'bahwa',
+        'berikut', 'sebelum', 'setelah', 'antara', 'sebagai', 'yaitu', 'setiap',
+        'di', 'dan', 'ada'  # Tambahan spesifik
+    }
+    stopwords.update(custom_stopwords)
+
+    # Filter kata
+    words = raw_text.split()
+    filtered_words = [word for word in words if word not in stopwords]
+    clean_text = " ".join(filtered_words)
+
+    # Word Cloud
+    wc = WordCloud(width=800, height=400, background_color='white').generate(clean_text)
     fig_wc, ax_wc = plt.subplots(figsize=(12, 6))
     ax_wc.imshow(wc, interpolation='bilinear')
     ax_wc.axis('off')
